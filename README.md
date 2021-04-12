@@ -1,0 +1,1 @@
+$ .\mvnw install && .\mvnw spring-boot:run -pl service
