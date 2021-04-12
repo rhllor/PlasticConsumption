@@ -35,6 +35,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>1.5.2</version>
+		</dependency>
+
+		<dependency>
 			<groupId>com.github.rhllor.pc</groupId>
 			<artifactId>library</artifactId>
 			<version>${project.version}</version>
