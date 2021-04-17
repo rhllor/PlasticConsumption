@@ -12,7 +12,6 @@ import com.github.rhllor.pc.library.ConsumptionRepository;
 import com.github.rhllor.pc.library.ConsumptionSpecification;
 import com.github.rhllor.pc.library.SearchCriteria;
 import com.github.rhllor.pc.library.UserRepository;
-import com.github.rhllor.pc.library.SearchCriteria.TypeSearch;
 import com.github.rhllor.pc.service.model.UserModelAssembler;
 import com.github.rhllor.pc.service.NotFoundException;
 

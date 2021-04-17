@@ -27,7 +27,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private static final RequestMatcher _publicUrls = new OrRequestMatcher(
-        new AntPathRequestMatcher("/login")
+        new AntPathRequestMatcher("/auth/login")
     );
     private static final RequestMatcher _protectedUrls = new NegatedRequestMatcher(_publicUrls);
 
@@ -41,10 +41,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override 
     public void configure(WebSecurity web) {
-        web.ignoring().requestMatchers(_publicUrls);
-        web.ignoring().antMatchers("/v3/api-docs/**", 
-                                   "/swagger-ui/**", 
-                                   "/swagger-ui.html");
+        web.ignoring().requestMatchers(_publicUrls).antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html");
     }
 
     @Override
