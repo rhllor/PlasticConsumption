@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -33,6 +36,7 @@ import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/consumptions")
+@Tag(name = "Consumption", description = "Raccolta delle API relative ai consumi di plastica.")
 public class ConsumptionController implements ISecuredController {
 
     private final ConsumptionRepository _repository;
@@ -44,6 +48,7 @@ public class ConsumptionController implements ISecuredController {
     }
 
     @GetMapping("/id/{id}")
+    @Operation(summary = "Estrae uno specifico consumo.", tags = { "Users", "Consumption" })
     public EntityModel<Consumption> one(@PathVariable Long id) {
         Consumption consumption = this._repository.findById(id)
             .orElseThrow(() -> new NotFoundException());
@@ -52,6 +57,7 @@ public class ConsumptionController implements ISecuredController {
     }
 
     @GetMapping("/")
+    @Operation(summary = "Estrae i consumi di tutti gli utenti.", tags = { "Users", "Consumption" })
     public CollectionModel<EntityModel<Consumption>> all() {
         List<EntityModel<Consumption>> consumptions = this._repository.findAll().stream()
             .map(this._assembler::toModel)
@@ -61,6 +67,7 @@ public class ConsumptionController implements ISecuredController {
     }
 
     @GetMapping("/{year}")
+    @Operation(summary = "Estrae i consumi di tutti gli utenti in un determinato anno.", tags = { "Users", "Consumption" })
     public CollectionModel<EntityModel<Consumption>> all(@PathVariable int year) {
 
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", year));
@@ -73,6 +80,7 @@ public class ConsumptionController implements ISecuredController {
     }
     
     @GetMapping("/{year}/{weekNumber}")
+    @Operation(summary = "Estrae i consumi di tutti gli utenti in una determinata settimana di uno specifico anno.", tags = { "Users", "Consumption" })
     public CollectionModel<EntityModel<Consumption>> all(@PathVariable int year, @PathVariable int weekNumber) {
 
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", Calendar.getInstance().get(Calendar.YEAR)));
@@ -86,6 +94,7 @@ public class ConsumptionController implements ISecuredController {
     }
 
     @PutMapping("/")
+    @Operation(summary = "Censisce un nuovo consumo settimanale.", description = "Questa API censisce, o aggiorna se non presente, il consumo di plastica per la settimana corrente dell'utente autenticato al servizio." , tags = { "Consumption" })
     public ResponseEntity<?> replace(@RequestBody @Valid ConsumptionEntry consumptionEntry) {
 
         Long userId = 1L;
@@ -112,6 +121,7 @@ public class ConsumptionController implements ISecuredController {
     }
 
     @DeleteMapping("/")
+    @Operation(summary = "Elimina il consumo della settimana corrente.", tags = { "Consumption" })
     public ResponseEntity<?> delete() {
         
         Long userId = 1L;

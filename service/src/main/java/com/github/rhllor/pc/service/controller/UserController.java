@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.hateoas.EntityModel;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -29,6 +32,7 @@ import org.springframework.hateoas.CollectionModel;
 
 @RestController
 @RequestMapping("/users")
+@Tag(name = "Users", description = "Raccolta delle API relative agli utenti.")
 public class UserController implements ISecuredController {
     
     private final ConsumptionRepository _consumptionRepository;
@@ -41,7 +45,8 @@ public class UserController implements ISecuredController {
         this._assembler = assembler;
     }
     
-    @GetMapping("/")
+    @GetMapping("/")    
+    @Operation(summary = "Estrae le utenze.", tags = { "Users" })
     public CollectionModel<EntityModel<User>> allUsers() {
         List<EntityModel<User>> users = this._userRepository.findAll().stream()
             .map(user -> EntityModel.of(user,
@@ -53,6 +58,7 @@ public class UserController implements ISecuredController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Recupera singolo utente utilizzando il suo ID.", tags = { "Users" })
     public EntityModel<User> oneUser(@PathVariable Long id) {
         User user = this._userRepository.findById(id)
             .orElseThrow(() -> new NotFoundException());
@@ -63,6 +69,7 @@ public class UserController implements ISecuredController {
     }
 
     @GetMapping("/consumptions")
+    @Operation(summary = "Estrae i consumi di tutti gli utenti.", tags = { "Users", "Consumption" })
     public CollectionModel<EntityModel<Consumption>> all(
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
@@ -81,6 +88,7 @@ public class UserController implements ISecuredController {
     }
     
     @GetMapping("/consumptions/{year}")
+    @Operation(summary = "Estrae i consumi di tutti gli utenti in un singolo anno.", tags = { "Users", "Consumption" })
     public CollectionModel<EntityModel<Consumption>> all(@PathVariable int year) {
 
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", year));
@@ -92,6 +100,7 @@ public class UserController implements ISecuredController {
     }
     
     @GetMapping("/consumptions/{year}/{weekNumber}")
+    @Operation(summary = "Estrae i consumi di tutti gli utenti in una determinata settimana di uno specifico anno.", tags = { "Users", "Consumption" })
     public CollectionModel<EntityModel<Consumption>> all(@PathVariable int year, @PathVariable int weekNumber) {
 
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", year));
@@ -104,6 +113,7 @@ public class UserController implements ISecuredController {
     }
     
     @GetMapping("{id}/consumptions")
+    @Operation(summary = "Estrae tutti i consumi di uno specifico utente.", tags = { "Users", "Consumption" })
     public CollectionModel<EntityModel<Consumption>> allByUser(@PathVariable Long id, 
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
@@ -123,6 +133,7 @@ public class UserController implements ISecuredController {
     }
     
     @GetMapping("{id}/consumptions/{year}")
+    @Operation(summary = "Estrae tutti i consumi di uno specifico utente in un determinato anno.", tags = { "Users", "Consumption" })
     public CollectionModel<EntityModel<Consumption>> allByUser(@PathVariable Long id, @PathVariable int year) {
         
         ConsumptionSpecification specUserId = new ConsumptionSpecification(new SearchCriteria("userId", id));
@@ -135,6 +146,7 @@ public class UserController implements ISecuredController {
     }
     
     @GetMapping("{id}/consumptions/{year}/{weekNumber}")
+    @Operation(summary = "Estrae tutti i consumi di uno specifico utente in una determinata settimana di uno specifico anno.", description = "Ritorna Token di autenticazione.", tags = { "Users", "Consumption" })
     public EntityModel<Consumption> one(@PathVariable Long id, @PathVariable int year, @PathVariable int weekNumber) {
         
         ConsumptionSpecification specUserId = new ConsumptionSpecification(new SearchCriteria("userId", id));
