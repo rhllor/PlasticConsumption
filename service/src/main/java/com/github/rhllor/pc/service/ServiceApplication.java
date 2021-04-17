@@ -7,7 +7,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@ComponentScan({"com.github.rhllor.pc.library", "com.github.rhllor.pc.service", })
+@ComponentScan({ "com.github.rhllor.pc.library", "com.github.rhllor.pc.service" })
 @EntityScan("com.github.rhllor.pc.library.entity")
 @EnableJpaRepositories("com.github.rhllor.pc.library")
 public class ServiceApplication {

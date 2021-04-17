@@ -33,7 +33,7 @@ import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/consumptions")
-public class ConsumptionController {
+public class ConsumptionController implements ISecuredController {
 
     private final ConsumptionRepository _repository;
     private final ConsumptionModelAssembler _assembler;

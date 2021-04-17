@@ -29,7 +29,7 @@ import org.springframework.hateoas.CollectionModel;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UserController implements ISecuredController {
     
     private final ConsumptionRepository _consumptionRepository;
     private final UserRepository _userRepository;
