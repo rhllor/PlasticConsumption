@@ -16,6 +16,6 @@ public class UserModelAssembler implements RepresentationModelAssembler<Consumpt
   
       return EntityModel.of(consumption, //
           linkTo(methodOn(UserController.class).one(consumption.getUserId(), consumption.getYear(), consumption.getWeekNumber())).withSelfRel(),
-          linkTo(methodOn(UserController.class).all(null, null)).withSelfRel());
+          linkTo(methodOn(UserController.class).allUsers()).withSelfRel());
     }
 }

@@ -33,7 +33,7 @@ import org.springframework.hateoas.CollectionModel;
 @RestController
 @RequestMapping("/users")
 @Tag(name = "Users", description = "Raccolta delle API relative agli utenti.")
-public class UserController implements ISecuredController {
+public class UserController extends AbstractConsumption implements ISecuredController {
     
     private final ConsumptionRepository _consumptionRepository;
     private final UserRepository _userRepository;
@@ -54,7 +54,7 @@ public class UserController implements ISecuredController {
                 linkTo(methodOn(UserController.class).allUsers()).withSelfRel()))
             .collect(Collectors.toList());
 
-        return CollectionModel.of(users, linkTo(methodOn(UserController.class).all(null, null)).withSelfRel());
+        return CollectionModel.of(users, linkTo(methodOn(UserController.class).allUsers()).withSelfRel());
     }
 
     @GetMapping("/{id}")
@@ -66,50 +66,6 @@ public class UserController implements ISecuredController {
         return EntityModel.of(user, //
             linkTo(methodOn(UserController.class).oneUser(user.getId())).withSelfRel(),
             linkTo(methodOn(UserController.class).allUsers()).withSelfRel());
-    }
-
-    @GetMapping("/consumptions")
-    @Operation(summary = "Estrae i consumi di tutti gli utenti.", tags = { "Users", "Consumption" })
-    public CollectionModel<EntityModel<Consumption>> all(
-        @RequestParam(required = false)
-        @DateTimeFormat(pattern="yyyy-MM-dd")
-        Date fromDate, 
-        @RequestParam(required = false)
-        @DateTimeFormat(pattern="yyyy-MM-dd")
-        Date toDate) 
-    {
-        Specification<Consumption> specDate = manageFromAndToDate(fromDate, toDate);
-
-        List<EntityModel<Consumption>> consumptions = this._consumptionRepository.findAll(specDate).stream()
-            .map(this._assembler::toModel)
-            .collect(Collectors.toList());
-
-        return CollectionModel.of(consumptions, linkTo(methodOn(UserController.class).all(null, null)).withSelfRel());
-    }
-    
-    @GetMapping("/consumptions/{year}")
-    @Operation(summary = "Estrae i consumi di tutti gli utenti in un singolo anno.", tags = { "Users", "Consumption" })
-    public CollectionModel<EntityModel<Consumption>> all(@PathVariable int year) {
-
-        ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", year));
-        List<EntityModel<Consumption>> consumptions = this._consumptionRepository.findAll(specYear).stream()
-            .map(this._assembler::toModel)
-            .collect(Collectors.toList());
-
-        return CollectionModel.of(consumptions, linkTo(methodOn(UserController.class).all(null, null)).withSelfRel());
-    }
-    
-    @GetMapping("/consumptions/{year}/{weekNumber}")
-    @Operation(summary = "Estrae i consumi di tutti gli utenti in una determinata settimana di uno specifico anno.", tags = { "Users", "Consumption" })
-    public CollectionModel<EntityModel<Consumption>> all(@PathVariable int year, @PathVariable int weekNumber) {
-
-        ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", year));
-        ConsumptionSpecification specWeekNumber = new ConsumptionSpecification(new SearchCriteria("weekNumber", year));
-        List<EntityModel<Consumption>> consumptions = this._consumptionRepository.findAll(Specification.where(specYear).and(specWeekNumber)).stream()
-            .map(this._assembler::toModel)
-            .collect(Collectors.toList());
-
-        return CollectionModel.of(consumptions, linkTo(methodOn(UserController.class).all(null, null)).withSelfRel());
     }
     
     @GetMapping("{id}/consumptions")
@@ -129,7 +85,7 @@ public class UserController implements ISecuredController {
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(consumptions, linkTo(methodOn(UserController.class).all(null, null)).withSelfRel());
+        return CollectionModel.of(consumptions, linkTo(methodOn(UserController.class).allByUser(id, fromDate, toDate)).withSelfRel());
     }
     
     @GetMapping("{id}/consumptions/{year}")
@@ -142,7 +98,7 @@ public class UserController implements ISecuredController {
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(consumptions, linkTo(methodOn(UserController.class).all(null, null)).withSelfRel());
+        return CollectionModel.of(consumptions, linkTo(methodOn(UserController.class).allByUser(id, year)).withSelfRel());
     }
     
     @GetMapping("{id}/consumptions/{year}/{weekNumber}")
@@ -158,26 +114,4 @@ public class UserController implements ISecuredController {
         return this._assembler.toModel(consumption);
     }
 
-    private Specification<Consumption> manageFromAndToDate(Date from, Date to) {
-
-        if (from == null && to == null)
-            return null;
-
-        ConsumptionSpecification specFrom;
-        ConsumptionSpecification specTo;
-
-        if (from != null && to == null) {
-            specFrom = new ConsumptionSpecification(new SearchCriteria("fromDate", from, TypeSearch.greaterOrEqual));
-            return Specification.where(specFrom);
-        }
-        
-        if (from == null && to != null) {
-            specTo = new ConsumptionSpecification(new SearchCriteria("toDate", to, TypeSearch.lessOrEqual));
-            return Specification.where(specTo);
-        }
-
-        specFrom = new ConsumptionSpecification(new SearchCriteria("fromDate", from, TypeSearch.greaterOrEqual));
-        specTo = new ConsumptionSpecification(new SearchCriteria("toDate", to, TypeSearch.lessOrEqual));
-        return Specification.where(specFrom).and(specTo);
-    }
 }

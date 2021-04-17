@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,13 +33,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/consumptions")
-@Tag(name = "Consumption", description = "Raccolta delle API relative ai consumi di plastica.")
-public class ConsumptionController implements ISecuredController {
+@Tag(name = "Consumptions", description = "Raccolta delle API relative ai consumi di plastica.")
+public class ConsumptionController extends AbstractConsumption implements ISecuredController {
 
     private final ConsumptionRepository _repository;
     private final ConsumptionModelAssembler _assembler;
@@ -48,7 +51,7 @@ public class ConsumptionController implements ISecuredController {
     }
 
     @GetMapping("/id/{id}")
-    @Operation(summary = "Estrae uno specifico consumo.", tags = { "Users", "Consumption" })
+    @Operation(summary = "Estrae uno specifico consumo.", tags = { "Consumption" })
     public EntityModel<Consumption> one(@PathVariable Long id) {
         Consumption consumption = this._repository.findById(id)
             .orElseThrow(() -> new NotFoundException());
@@ -57,17 +60,26 @@ public class ConsumptionController implements ISecuredController {
     }
 
     @GetMapping("/")
-    @Operation(summary = "Estrae i consumi di tutti gli utenti.", tags = { "Users", "Consumption" })
-    public CollectionModel<EntityModel<Consumption>> all() {
-        List<EntityModel<Consumption>> consumptions = this._repository.findAll().stream()
+    @Operation(summary = "Estrae i consumi di tutti gli utenti.", tags = { "Consumption" })
+    public CollectionModel<EntityModel<Consumption>> all(
+        @RequestParam(required = false)
+        @DateTimeFormat(pattern="yyyy-MM-dd")
+        Date fromDate, 
+        @RequestParam(required = false)
+        @DateTimeFormat(pattern="yyyy-MM-dd")
+        Date toDate) {
+            
+        Specification<Consumption> specDate = manageFromAndToDate(fromDate, toDate);
+
+        List<EntityModel<Consumption>> consumptions = this._repository.findAll(specDate).stream()
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all()).withSelfRel());
+        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all(null, null)).withSelfRel());
     }
 
     @GetMapping("/{year}")
-    @Operation(summary = "Estrae i consumi di tutti gli utenti in un determinato anno.", tags = { "Users", "Consumption" })
+    @Operation(summary = "Estrae i consumi di tutti gli utenti in un determinato anno.", tags = { "Consumption" })
     public CollectionModel<EntityModel<Consumption>> all(@PathVariable int year) {
 
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", year));
@@ -76,11 +88,11 @@ public class ConsumptionController implements ISecuredController {
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all()).withSelfRel());
+        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all(null, null)).withSelfRel());
     }
     
     @GetMapping("/{year}/{weekNumber}")
-    @Operation(summary = "Estrae i consumi di tutti gli utenti in una determinata settimana di uno specifico anno.", tags = { "Users", "Consumption" })
+    @Operation(summary = "Estrae i consumi di tutti gli utenti in una determinata settimana di uno specifico anno.", tags = { "Consumption" })
     public CollectionModel<EntityModel<Consumption>> all(@PathVariable int year, @PathVariable int weekNumber) {
 
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", Calendar.getInstance().get(Calendar.YEAR)));
@@ -90,7 +102,7 @@ public class ConsumptionController implements ISecuredController {
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all()).withSelfRel());
+        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all(null, null)).withSelfRel());
     }
 
     @PutMapping("/")
