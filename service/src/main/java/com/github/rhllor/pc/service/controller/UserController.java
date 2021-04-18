@@ -8,12 +8,12 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import com.github.rhllor.pc.library.entity.Consumption;
 import com.github.rhllor.pc.library.entity.User;
-import com.github.rhllor.pc.library.ConsumptionRepository;
+import com.github.rhllor.pc.library.service.ConsumptionService;
+import com.github.rhllor.pc.library.service.UserService;
 import com.github.rhllor.pc.library.ConsumptionSpecification;
 import com.github.rhllor.pc.library.SearchCriteria;
-import com.github.rhllor.pc.library.UserRepository;
+import com.github.rhllor.pc.service.error.NotFoundException;
 import com.github.rhllor.pc.service.model.UserModelAssembler;
-import com.github.rhllor.pc.service.NotFoundException;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,20 +34,20 @@ import org.springframework.hateoas.CollectionModel;
 @Tag(name = "Users", description = "Raccolta delle API relative agli utenti.")
 public class UserController extends AbstractConsumption implements ISecuredController {
     
-    private final ConsumptionRepository _consumptionRepository;
-    private final UserRepository _userRepository;
+    private final ConsumptionService _cService;
+    private final UserService _uService;
     private final UserModelAssembler _assembler;
     
-    public UserController(ConsumptionRepository consumptionRepository, UserRepository userRepository, UserModelAssembler assembler) {
-        this._consumptionRepository = consumptionRepository;
-        this._userRepository = userRepository;
+    public UserController(ConsumptionService consumptionRepository, UserService userService, UserModelAssembler assembler) {
+        this._cService = consumptionRepository;
+        this._uService = userService;
         this._assembler = assembler;
     }
     
     @GetMapping("/")    
     @Operation(summary = "Estrae le utenze.", tags = { "Users" })
     public CollectionModel<EntityModel<User>> allUsers() {
-        List<EntityModel<User>> users = this._userRepository.findAll().stream()
+        List<EntityModel<User>> users = this._uService.findAll().stream()
             .map(user -> EntityModel.of(user,
                 linkTo(methodOn(UserController.class).oneUser(user.getId())).withSelfRel(),
                 linkTo(methodOn(UserController.class).allUsers()).withSelfRel()))
@@ -59,7 +59,7 @@ public class UserController extends AbstractConsumption implements ISecuredContr
     @GetMapping("/{id}")
     @Operation(summary = "Recupera singolo utente utilizzando il suo ID.", tags = { "Users" })
     public EntityModel<User> oneUser(@PathVariable Long id) {
-        User user = this._userRepository.findById(id)
+        User user = this._uService.findById(id)
             .orElseThrow(() -> new NotFoundException());
 
         return EntityModel.of(user, //
@@ -79,7 +79,7 @@ public class UserController extends AbstractConsumption implements ISecuredContr
     {
         Specification<Consumption> specDate = manageFromAndToDate(fromDate, toDate);        
         ConsumptionSpecification specUserId = new ConsumptionSpecification(new SearchCriteria("userId", id));
-        List<EntityModel<Consumption>> consumptions = this._consumptionRepository.findAll(
+        List<EntityModel<Consumption>> consumptions = this._cService.findAll(
             Specification.where(specUserId).and(specDate)).stream()
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
@@ -93,7 +93,7 @@ public class UserController extends AbstractConsumption implements ISecuredContr
         
         ConsumptionSpecification specUserId = new ConsumptionSpecification(new SearchCriteria("userId", id));
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", year));
-        List<EntityModel<Consumption>> consumptions = this._consumptionRepository.findAll(Specification.where(specUserId).and(specYear)).stream()
+        List<EntityModel<Consumption>> consumptions = this._cService.findAll(Specification.where(specUserId).and(specYear)).stream()
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
@@ -107,7 +107,7 @@ public class UserController extends AbstractConsumption implements ISecuredContr
         ConsumptionSpecification specUserId = new ConsumptionSpecification(new SearchCriteria("userId", id));
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", year));
         ConsumptionSpecification specWeekNumber = new ConsumptionSpecification(new SearchCriteria("weekNumber", weekNumber));
-        Consumption consumption = this._consumptionRepository.findOne(Specification.where(specUserId).and(specYear).and(specWeekNumber))
+        Consumption consumption = this._cService.findOne(Specification.where(specUserId).and(specYear).and(specWeekNumber))
             .orElseThrow(() -> new NotFoundException());
 
         return this._assembler.toModel(consumption);

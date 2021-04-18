@@ -3,6 +3,7 @@ package com.github.rhllor.pc.service.auth;
 import java.util.UUID;
 
 import com.github.rhllor.pc.library.entity.User;
+import com.github.rhllor.pc.library.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;

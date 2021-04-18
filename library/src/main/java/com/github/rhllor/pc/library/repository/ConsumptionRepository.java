@@ -1,4 +1,4 @@
-package com.github.rhllor.pc.library;
+package com.github.rhllor.pc.library.repository;
 
 import com.github.rhllor.pc.library.entity.Consumption;
 import org.springframework.data.jpa.repository.JpaRepository;

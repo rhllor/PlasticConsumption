@@ -6,6 +6,8 @@ import java.util.Random;
 
 import com.github.rhllor.pc.library.entity.Consumption;
 import com.github.rhllor.pc.library.entity.User;
+import com.github.rhllor.pc.library.repository.ConsumptionRepository;
+import com.github.rhllor.pc.library.repository.UserRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +45,14 @@ public class LoadDatabase {
             int actualYear = Calendar.getInstance().get(Calendar.YEAR);
 
             for (Long idUser = 1L; idUser <= 4L; idUser++) {
-                for (int weekNumber = 0; weekNumber < actualWN; weekNumber++) {
+
+                for (int year = 2000; year <= 2020; year++) {
+                    for (int weekNumber = 5; weekNumber <= 52; weekNumber++) {
+                        _log.info("Record: " + repository.save(new Consumption(idUser, year, weekNumber, nextWeight())));
+                    }
+                }
+
+                for (int weekNumber = 1; weekNumber < actualWN; weekNumber++) {
                     _log.info("Record: " + repository.save(new Consumption(idUser, actualYear, weekNumber, nextWeight())));
                 }
             }

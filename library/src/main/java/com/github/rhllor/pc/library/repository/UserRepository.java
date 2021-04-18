@@ -1,4 +1,4 @@
-package com.github.rhllor.pc.library;
+package com.github.rhllor.pc.library.repository;
 
 import java.util.Optional;
 import com.github.rhllor.pc.library.entity.User;

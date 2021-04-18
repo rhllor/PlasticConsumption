@@ -4,6 +4,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 @Entity
 public class Consumption {
@@ -16,11 +18,18 @@ public class Consumption {
         this.setWeight(weight);
     }
 
-    private @Id @GeneratedValue(strategy = GenerationType.AUTO) Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
     
+    @NotNull(message = "ID Utente deve essere valorizzato")
     private Long userId;
+    @NotNull(message = "L'Anno deve essere valorizzato")
     private int year;
+    @NotNull(message = "Il numero della settimana deve essere valorizzato")
     private int weekNumber;
+    @NotNull(message = "Il peso deve essere valorizzato")
+    @Min(value = 0, message = "Il peso può essere solo un valore positivo.")
     private float weight;
 
     public Long getId() {

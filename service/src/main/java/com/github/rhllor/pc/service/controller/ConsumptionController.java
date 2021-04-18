@@ -11,11 +11,11 @@ import java.util.List;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import com.github.rhllor.pc.library.entity.Consumption;
-import com.github.rhllor.pc.library.ConsumptionRepository;
+import com.github.rhllor.pc.library.service.ConsumptionService;
 import com.github.rhllor.pc.library.ConsumptionSpecification;
 import com.github.rhllor.pc.library.SearchCriteria;
+import com.github.rhllor.pc.service.error.NotFoundException;
 import com.github.rhllor.pc.service.model.ConsumptionModelAssembler;
-import com.github.rhllor.pc.service.NotFoundException;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,18 +42,18 @@ import org.springframework.http.ResponseEntity;
 @Tag(name = "Consumptions", description = "Raccolta delle API relative ai consumi di plastica.")
 public class ConsumptionController extends AbstractConsumption implements ISecuredController {
 
-    private final ConsumptionRepository _repository;
+    private final ConsumptionService _cService;
     private final ConsumptionModelAssembler _assembler;
 
-    public ConsumptionController(ConsumptionRepository repository, ConsumptionModelAssembler assembler) {
-        this._repository = repository;
+    public ConsumptionController(ConsumptionService cService, ConsumptionModelAssembler assembler) {
+        this._cService = cService;
         this._assembler = assembler;
     }
 
     @GetMapping("/id/{id}")
     @Operation(summary = "Estrae uno specifico consumo.", tags = { "Consumption" })
     public EntityModel<Consumption> one(@PathVariable Long id) {
-        Consumption consumption = this._repository.findById(id)
+        Consumption consumption = this._cService.findById(id)
             .orElseThrow(() -> new NotFoundException());
 
         return this._assembler.toModel(consumption);
@@ -71,7 +71,7 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
             
         Specification<Consumption> specDate = manageFromAndToDate(fromDate, toDate);
 
-        List<EntityModel<Consumption>> consumptions = this._repository.findAll(specDate).stream()
+        List<EntityModel<Consumption>> consumptions = this._cService.findAll(specDate).stream()
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
@@ -84,7 +84,7 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
 
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", year));
 
-        List<EntityModel<Consumption>> consumptions = this._repository.findAll(specYear).stream()
+        List<EntityModel<Consumption>> consumptions = this._cService.findAll(specYear).stream()
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
@@ -98,7 +98,7 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", Calendar.getInstance().get(Calendar.YEAR)));
         ConsumptionSpecification specWeekNumber = new ConsumptionSpecification(new SearchCriteria("weekNumber", weekNumber));
 
-        List<EntityModel<Consumption>> consumptions = this._repository.findAll(Specification.where(specYear).and(specWeekNumber)).stream()
+        List<EntityModel<Consumption>> consumptions = this._cService.findAll(Specification.where(specYear).and(specWeekNumber)).stream()
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
@@ -117,14 +117,13 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", actualYear));
         ConsumptionSpecification specWeekNumber = new ConsumptionSpecification(new SearchCriteria("weekNumber", weekNumber));
 
-        Consumption updatetedValue = this._repository.findOne(Specification.where(specYear).and(specWeekNumber).and(specUser))
+        Consumption updatetedValue = this._cService.findOne(Specification.where(specYear).and(specWeekNumber).and(specUser))
             .map(consumption -> {
                 consumption.setWeight(consumptionEntry.getWeight());
-                return this._repository.save(consumption);
+                return this._cService.save(consumption);
             }).orElseGet(() ->{
-
                 Consumption newConsumption = new Consumption(userId, actualYear, weekNumber, consumptionEntry.getWeight());
-                return this._repository.save(newConsumption);
+                return this._cService.save(newConsumption);
             });
         EntityModel<Consumption> entityModel = this._assembler.toModel(updatetedValue);
         return ResponseEntity 
@@ -140,11 +139,12 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
         ConsumptionSpecification specUser = new ConsumptionSpecification(new SearchCriteria("userId", userId));
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", Calendar.getInstance().get(Calendar.YEAR)));
         ConsumptionSpecification specWeekNumber = new ConsumptionSpecification(new SearchCriteria("weekNumber", Calendar.getInstance().get(Calendar.WEEK_OF_YEAR)));
-        Consumption consumption = this._repository.findOne(Specification.where(specYear).and(specWeekNumber).and(specUser))
+        Consumption consumption = this._cService.findOne(Specification.where(specYear).and(specWeekNumber).and(specUser))
             .orElseThrow(() -> new NotFoundException());
 
-        this._repository.delete(consumption);
+        this._cService.delete(consumption);
 
         return ResponseEntity.noContent().build();
     }
+
 }

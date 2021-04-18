@@ -1,4 +1,4 @@
-package com.github.rhllor.pc.service;
+package com.github.rhllor.pc.service.error;
 
 public class NotFoundException extends RuntimeException {
 
