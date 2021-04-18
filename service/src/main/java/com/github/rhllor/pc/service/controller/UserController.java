@@ -68,23 +68,25 @@ public class UserController extends AbstractConsumption implements ISecuredContr
     }
     
     @GetMapping("{id}/consumptions")
-    @Operation(summary = "Estrae tutti i consumi di uno specifico utente.", tags = { "Users", "Consumption" })
+    @Operation(summary = "Estrae tutti i consumi di uno specifico utente.", description = "Questa API è paginata con una dimensione minima di 50 record visualizzati e massimo 500.", tags = { "Users", "Consumption" })
     public CollectionModel<EntityModel<Consumption>> allByUser(@PathVariable Long id, 
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
         Date fromDate, 
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
-        Date toDate) 
+        Date toDate,
+        @RequestParam(required = false) Integer pageNo, 
+        @RequestParam(required = false) Integer pageSize) 
     {
         Specification<Consumption> specDate = manageFromAndToDate(fromDate, toDate);        
         ConsumptionSpecification specUserId = new ConsumptionSpecification(new SearchCriteria("userId", id));
         List<EntityModel<Consumption>> consumptions = this._cService.findAll(
-            Specification.where(specUserId).and(specDate)).stream()
+            Specification.where(specUserId).and(specDate), pageNo, pageSize).stream()
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(consumptions, linkTo(methodOn(UserController.class).allByUser(id, fromDate, toDate)).withSelfRel());
+        return CollectionModel.of(consumptions, linkTo(methodOn(UserController.class).allByUser(id, fromDate, toDate, pageNo, pageSize)).withSelfRel());
     }
     
     @GetMapping("{id}/consumptions/{year}")

@@ -60,22 +60,24 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
     }
 
     @GetMapping("/")
-    @Operation(summary = "Estrae i consumi di tutti gli utenti.", tags = { "Consumption" })
+    @Operation(summary = "Estrae i consumi di tutti gli utenti.", description = "Questa API è paginata con una dimensione minima di 50 record visualizzati e massimo 500.", tags = { "Consumption" })
     public CollectionModel<EntityModel<Consumption>> all(
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
         Date fromDate, 
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
-        Date toDate) {
+        Date toDate,
+        @RequestParam(required = false) Integer pageNo, 
+        @RequestParam(required = false) Integer pageSize) {
             
         Specification<Consumption> specDate = manageFromAndToDate(fromDate, toDate);
 
-        List<EntityModel<Consumption>> consumptions = this._cService.findAll(specDate).stream()
+        List<EntityModel<Consumption>> consumptions = this._cService.findAll(specDate, pageNo, pageSize).stream()
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all(null, null)).withSelfRel());
+        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all(fromDate, toDate, pageNo, pageSize)).withSelfRel());
     }
 
     @GetMapping("/{year}")
@@ -88,7 +90,7 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all(null, null)).withSelfRel());
+        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all(year)).withSelfRel());
     }
     
     @GetMapping("/{year}/{weekNumber}")
@@ -102,7 +104,7 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
             .map(this._assembler::toModel)
             .collect(Collectors.toList());
 
-        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all(null, null)).withSelfRel());
+        return CollectionModel.of(consumptions, linkTo(methodOn(ConsumptionController.class).all(year)).withSelfRel());
     }
 
     @PutMapping("/")

@@ -16,6 +16,6 @@ public class ConsumptionModelAssembler implements RepresentationModelAssembler<C
 
     return EntityModel.of(consumption, //
         linkTo(methodOn(ConsumptionController.class).one(consumption.getId())).withSelfRel(),
-        linkTo(methodOn(ConsumptionController.class).all(null, null)).withSelfRel());
+        linkTo(methodOn(ConsumptionController.class).all(null, null, null, null)).withSelfRel());
   }
 }
