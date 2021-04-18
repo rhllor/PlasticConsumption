@@ -5,10 +5,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
 
 @SpringBootTest
-class ServiceApplicationTests {
+
+class ServiceApplicationTest {
 
 	@Test
 	void contextLoads() {
-		Assert.isTrue(true);
+		Assert.isTrue(true, ":P");
 	}
 }
