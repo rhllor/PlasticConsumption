@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.hateoas.EntityModel;
@@ -72,12 +73,18 @@ public class UserController extends AbstractConsumption implements ISecuredContr
     public CollectionModel<EntityModel<Consumption>> allByUser(@PathVariable Long id, 
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
+        @Parameter(description = "Formato accettato YYYY-MM-DD") 
         Date fromDate, 
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
+        @Parameter(description = "Formato accettato YYYY-MM-DD") 
         Date toDate,
-        @RequestParam(required = false) Integer pageNo, 
-        @RequestParam(required = false) Integer pageSize) 
+        @RequestParam(required = false) 
+        @Parameter(description = "Valore minimo: 0.") 
+        Integer pageNo, 
+        @RequestParam(required = false) 
+        @Parameter(description = "Valore Minimo: 1. Valore Massimo: 500. Default: 50.") 
+        Integer pageSize)
     {
         Specification<Consumption> specDate = manageFromAndToDate(fromDate, toDate);        
         ConsumptionSpecification specUserId = new ConsumptionSpecification(new SearchCriteria("userId", id));

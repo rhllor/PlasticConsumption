@@ -11,7 +11,9 @@ import java.util.List;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import com.github.rhllor.pc.library.entity.Consumption;
+import com.github.rhllor.pc.library.entity.User;
 import com.github.rhllor.pc.library.service.ConsumptionService;
+import com.github.rhllor.pc.library.service.UserService;
 import com.github.rhllor.pc.library.ConsumptionSpecification;
 import com.github.rhllor.pc.library.SearchCriteria;
 import com.github.rhllor.pc.service.error.NotFoundException;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +39,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/consumptions")
@@ -43,10 +47,12 @@ import org.springframework.http.ResponseEntity;
 public class ConsumptionController extends AbstractConsumption implements ISecuredController {
 
     private final ConsumptionService _cService;
+    private final UserService _uService;
     private final ConsumptionModelAssembler _assembler;
 
-    public ConsumptionController(ConsumptionService cService, ConsumptionModelAssembler assembler) {
+    public ConsumptionController(ConsumptionService cService, UserService uService, ConsumptionModelAssembler assembler) {
         this._cService = cService;
+        this._uService = uService;
         this._assembler = assembler;
     }
 
@@ -64,12 +70,18 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
     public CollectionModel<EntityModel<Consumption>> all(
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
+        @Parameter(description = "Formato accettato YYYY-MM-DD") 
         Date fromDate, 
         @RequestParam(required = false)
         @DateTimeFormat(pattern="yyyy-MM-dd")
+        @Parameter(description = "Formato accettato YYYY-MM-DD") 
         Date toDate,
-        @RequestParam(required = false) Integer pageNo, 
-        @RequestParam(required = false) Integer pageSize) {
+        @RequestParam(required = false) 
+        @Parameter(description = "Valore minimo: 0.") 
+        Integer pageNo, 
+        @RequestParam(required = false) 
+        @Parameter(description = "Valore Minimo: 1. Valore Massimo: 500. Default: 50.") 
+        Integer pageSize) {
             
         Specification<Consumption> specDate = manageFromAndToDate(fromDate, toDate);
 
@@ -109,9 +121,9 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
 
     @PutMapping("/")
     @Operation(summary = "Censisce un nuovo consumo settimanale.", description = "Questa API censisce, o aggiorna se non presente, il consumo di plastica per la settimana corrente dell'utente autenticato al servizio." , tags = { "Consumption" })
-    public ResponseEntity<?> replace(@RequestBody @Valid ConsumptionEntry consumptionEntry) {
+    public ResponseEntity<?> replace(@RequestBody @Valid ConsumptionEntry consumptionEntry, Authentication authentication) throws Exception {
 
-        Long userId = 1L;
+        Long userId = getUserAuthenticatedId(authentication);
         int actualYear = Calendar.getInstance().get(Calendar.YEAR);
         int weekNumber = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR);
 
@@ -135,9 +147,9 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
 
     @DeleteMapping("/")
     @Operation(summary = "Elimina il consumo della settimana corrente.", tags = { "Consumption" })
-    public ResponseEntity<?> delete() {
+    public ResponseEntity<?> delete(Authentication authentication) throws Exception {
         
-        Long userId = 1L;
+        Long userId = getUserAuthenticatedId(authentication);
         ConsumptionSpecification specUser = new ConsumptionSpecification(new SearchCriteria("userId", userId));
         ConsumptionSpecification specYear = new ConsumptionSpecification(new SearchCriteria("year", Calendar.getInstance().get(Calendar.YEAR)));
         ConsumptionSpecification specWeekNumber = new ConsumptionSpecification(new SearchCriteria("weekNumber", Calendar.getInstance().get(Calendar.WEEK_OF_YEAR)));
@@ -147,6 +159,15 @@ public class ConsumptionController extends AbstractConsumption implements ISecur
         this._cService.delete(consumption);
 
         return ResponseEntity.noContent().build();
+    }
+
+    private Long getUserAuthenticatedId(Authentication authentication) throws Exception {
+
+        User userAuthenticated = this._uService.getByUsername(authentication.getName())
+            .map(user -> user)
+            .orElseThrow(() -> new Exception("L'utente autenticato non è stato trovato."));
+
+        return userAuthenticated.getId();
     }
 
 }
